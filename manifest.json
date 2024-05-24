@@ -1,0 +1,16 @@
+{
+    "name": "Check Mate",
+    "version": "0.0.1",
+    "description": "Check Mate stands as a vigilant protector within your Chrome browser, meticulously scanning every webpage you visit for potential threats lurking in the shadows of hyperlinks.",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage"
+      ],
+    "manifest_version": 3,
+    "author": "Porter Oleson",
+    "action": {
+        "default_popup": "index.html",
+        "default_name": "Check Mate"
+    }
+}
