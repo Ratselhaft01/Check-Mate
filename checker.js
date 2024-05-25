@@ -11,6 +11,7 @@ document.getElementById('check-urls').addEventListener('click', () => {
                 const protocolResults = checkProtocols(urls);
                 displayResults(protocolResults);
                 saveResults();
+                sendCollectedUrls(urls);
             }
         );
     });
@@ -72,6 +73,22 @@ function saveResults() {
     chrome.storage.local.set({ savedResults: results }, () => {
         // alert('Results saved!');
     });
+}
+
+function sendCollectedUrls(collectedUrls) {
+    fetch('http://localhost:3000/compare-urls', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ urls: collectedUrls })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Matches:", data.matches);
+        console.log("Non-Matches:", data.nonMatches);
+    })
+    .catch(error => console.error('Error:', error));
 }
 
 // Load saved results when popup is opened
