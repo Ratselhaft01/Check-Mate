@@ -9,9 +9,8 @@ document.getElementById('check-urls').addEventListener('click', () => {
             (results) => {
                 const urls = results[0].result;
                 const protocolResults = checkProtocols(urls);
-                displayResults(protocolResults);
+                sendCollectedUrls(urls, protocolResults);
                 saveResults();
-                sendCollectedUrls(urls);
             }
         );
     });
@@ -54,56 +53,118 @@ function checkProtocols(urls) {
     });
 }
 
-function displayResults(results) {
-    const resultsContainer = document.getElementById('results');
-    resultsContainer.innerHTML = ''; // Clear previous results
-
-    results.forEach(result => {
-        const resultElement = document.createElement('div');
-        resultElement.textContent = `URL: ${result.url} - Protocol: ${result.protocol} - Shortened: ${result.shortened}`; // Include shortened information
-        resultElement.className = 'result';
-        resultsContainer.appendChild(resultElement);
-    });
-}
-
-function saveResults() {
-    const resultsContainer = document.getElementById('results');
-    const results = Array.from(resultsContainer.children).map(child => child.textContent);
-
-    chrome.storage.local.set({ savedResults: results }, () => {
-        // alert('Results saved!');
-    });
-}
-
-function sendCollectedUrls(collectedUrls) {
-    fetch('http://localhost:3000/compare-urls', {
+function sendCollectedUrls(urls, protocolResults) {
+    fetch('http://localhost:5000/search', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ urls: collectedUrls })
+        body: JSON.stringify({ urls: urls })
     })
     .then(response => response.json())
     .then(data => {
-        console.log("Matches:", data.matches);
-        console.log("Non-Matches:", data.nonMatches);
+        displayResults(protocolResults, data);
     })
     .catch(error => console.error('Error:', error));
 }
 
-// Load saved results when popup is opened
-document.addEventListener('DOMContentLoaded', () => {
-    chrome.storage.local.get('savedResults', (data) => {
-        if (data.savedResults) {
-            const resultsContainer = document.getElementById('results');
-            resultsContainer.innerHTML = ''; // Clear previous results
+function displayResults(results, data) {
+    const resultsContainer = document.getElementById('results');
+    resultsContainer.innerHTML = ''; // Clear previous results
 
-            data.savedResults.forEach(resultText => {
-                const resultElement = document.createElement('div');
-                resultElement.textContent = resultText;
-                resultElement.className = 'result';
-                resultsContainer.appendChild(resultElement);
+    const protocolList = document.createElement('ul');
+    results.forEach(result => {
+        const li = document.createElement('li');
+        li.textContent = `URL: ${result.url} - Protocol: ${result.protocol} - Shortened: ${result.shortened}`;
+        protocolList.appendChild(li);
+    });
+    resultsContainer.appendChild(protocolList);
+
+    const matchesHeader = document.createElement('h3');
+    matchesHeader.textContent = 'Matches:';
+    resultsContainer.appendChild(matchesHeader);
+
+    const matchesList = document.createElement('ul');
+    data.Matches.forEach(url => {
+        const li = document.createElement('li');
+        li.textContent = url;
+        matchesList.appendChild(li);
+    });
+    resultsContainer.appendChild(matchesList);
+
+    const nonMatchesHeader = document.createElement('h3');
+    nonMatchesHeader.textContent = 'Non-Matches:';
+    resultsContainer.appendChild(nonMatchesHeader);
+
+    const nonMatchesList = document.createElement('ul');
+    data.Non_Matches.forEach(url => {
+        const li = document.createElement('li');
+        li.textContent = url;
+        nonMatchesList.appendChild(li);
+    });
+    resultsContainer.appendChild(nonMatchesList);
+}
+
+// function saveResults() {
+//     const resultsContainer = document.getElementById('results');
+//     const results = Array.from(resultsContainer.children).map(child => child.textContent);
+
+//     chrome.storage.local.set({ savedResults: results }, () => {
+//         // alert('Results saved!');
+//     });
+// }
+
+// // Load saved results when popup is opened
+// document.addEventListener('DOMContentLoaded', () => {
+//     chrome.storage.local.get('savedResults', (data) => {
+//         if (data.savedResults) {
+//             const resultsContainer = document.getElementById('results');
+
+//             resultsContainer.innerHTML = ''; // Clear previous results
+
+//             data.savedResults.forEach(resultText => {
+//                 const resultElement = document.createElement('div');
+//                 resultElement.textContent = resultText;
+//                 resultElement.className = 'result';
+//                 resultsContainer.appendChild(resultElement);
+//             });
+//         }
+//     });
+// });
+
+// Save the content of the results element
+function saveResults() {
+    var results = [];
+    var resultsElement = document.getElementById('results');
+    var resultItems = resultsElement.querySelectorAll('li');
+    
+    resultItems.forEach(function(item) {
+        results.push(item.innerText);
+    });
+    
+    chrome.storage.sync.set({ 'results': results }, function() {
+        console.log('Results saved successfully');
+    });
+}
+
+// Load the content of the results element
+function loadResults() {
+    chrome.storage.sync.get('results', function(data) {
+        var results = data.results;
+        if (results && results.length > 0) {
+            var resultsList = document.createElement('ul');
+            results.forEach(function(item) {
+                var listItem = document.createElement('li');
+                listItem.innerText = item;
+                resultsList.appendChild(listItem);
             });
+            document.getElementById('results').innerHTML = resultsList.outerHTML;
+            console.log('Results loaded successfully');
+        } else {
+            console.log('No results found');
         }
     });
-});
+}
+
+// Call loadResults when extension is opened
+document.addEventListener('DOMContentLoaded', loadResults);
