@@ -7,10 +7,12 @@ document.getElementById('check-urls').addEventListener('click', () => {
                 files: ['link_extractor.js']
             },
             (results) => {
-                const urls = results[0].result;
-                const protocolResults = checkProtocols(urls);
-                sendCollectedUrls(urls, protocolResults);
-                saveResults();
+                if (results) {
+                    const urls = results[0].result;
+                    const protocolResults = checkProtocols(urls);
+                    sendCollectedUrls(urls, protocolResults);
+                    saveResults();
+                } else {console.log('No urls to check.');}
             }
         );
     });
@@ -64,8 +66,8 @@ function sendCollectedUrls(urls, protocolResults) {
     .then(response => response.json())
     .then(data => {
         displayResults(protocolResults, data);
-    })
-    .catch(error => console.error('Error:', error));
+    });
+    // .catch(error => console.error('Error:', error));
 }
 
 function displayResults(results, data) {
@@ -105,66 +107,27 @@ function displayResults(results, data) {
     resultsContainer.appendChild(nonMatchesList);
 }
 
-// function saveResults() {
-//     const resultsContainer = document.getElementById('results');
-//     const results = Array.from(resultsContainer.children).map(child => child.textContent);
-
-//     chrome.storage.local.set({ savedResults: results }, () => {
-//         // alert('Results saved!');
-//     });
-// }
-
-// // Load saved results when popup is opened
-// document.addEventListener('DOMContentLoaded', () => {
-//     chrome.storage.local.get('savedResults', (data) => {
-//         if (data.savedResults) {
-//             const resultsContainer = document.getElementById('results');
-
-//             resultsContainer.innerHTML = ''; // Clear previous results
-
-//             data.savedResults.forEach(resultText => {
-//                 const resultElement = document.createElement('div');
-//                 resultElement.textContent = resultText;
-//                 resultElement.className = 'result';
-//                 resultsContainer.appendChild(resultElement);
-//             });
-//         }
-//     });
-// });
-
-// Save the content of the results element
 function saveResults() {
-    var results = [];
-    var resultsElement = document.getElementById('results');
-    var resultItems = resultsElement.querySelectorAll('li');
-    
-    resultItems.forEach(function(item) {
-        results.push(item.innerText);
-    });
-    
-    chrome.storage.sync.set({ 'results': results }, function() {
-        console.log('Results saved successfully');
+    const resultsContainer = document.getElementById('results');
+    const results = Array.from(resultsContainer.children).map(child => child.textContent);
+
+    chrome.storage.local.set({ savedResults: results }, () => {
+        // alert('Results saved!');
     });
 }
 
-// Load the content of the results element
-function loadResults() {
-    chrome.storage.sync.get('results', function(data) {
-        var results = data.results;
-        if (results && results.length > 0) {
-            var resultsList = document.createElement('ul');
-            results.forEach(function(item) {
-                var listItem = document.createElement('li');
-                listItem.innerText = item;
-                resultsList.appendChild(listItem);
+// Load saved results when popup is opened
+document.addEventListener('DOMContentLoaded', () => {
+    chrome.storage.local.get('savedResults', (data) => {
+        if (data.savedResults) {
+            const resultsContainer = document.getElementById('results');
+
+            data.savedResults.forEach(resultText => {
+                const resultElement = document.createElement('div');
+                resultElement.textContent = resultText;
+                resultElement.className = 'result';
+                resultsContainer.appendChild(resultElement);
             });
-            document.getElementById('results').innerHTML = resultsList.outerHTML;
-            console.log('Results loaded successfully');
-        } else {
-            console.log('No results found');
         }
     });
-}
-
-// Call loadResults when extension is opened
-document.addEventListener('DOMContentLoaded', loadResults);
+});
