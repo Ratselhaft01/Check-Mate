@@ -56,7 +56,7 @@ function checkProtocols(urls) {
 }
 
 function sendCollectedUrls(urls, protocolResults) {
-    fetch('http://localhost:5000/search', {
+    fetch('http://15.204.218.195', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -71,49 +71,36 @@ function sendCollectedUrls(urls, protocolResults) {
 }
 
 function displayResults(results, data) {
-    const resultsContainer = document.getElementById('results');
-    resultsContainer.innerHTML = ''; // Clear previous results
-
-    const protocolList = document.createElement('ul');
+    const protocolList = document.getElementById('urls');
+    protocolList.innerHTML = ''
     results.forEach(result => {
         const li = document.createElement('li');
         li.textContent = `URL: ${result.url} - Protocol: ${result.protocol} - Shortened: ${result.shortened}`;
         protocolList.appendChild(li);
     });
-    resultsContainer.appendChild(protocolList);
 
-    const matchesHeader = document.createElement('h3');
-    matchesHeader.textContent = 'Matches:';
-    resultsContainer.appendChild(matchesHeader);
-
-    const matchesList = document.createElement('ul');
+    const matchesList = document.getElementById('matches');
+    matchesList.innerHTML = ''
     data.Matches.forEach(url => {
         const li = document.createElement('li');
         li.textContent = url;
         matchesList.appendChild(li);
     });
-    resultsContainer.appendChild(matchesList);
 
-    const nonMatchesHeader = document.createElement('h3');
-    nonMatchesHeader.textContent = 'Non-Matches:';
-    resultsContainer.appendChild(nonMatchesHeader);
-
-    const nonMatchesList = document.createElement('ul');
+    const nonMatchesList = document.getElementById('non_matches');
+    nonMatchesList.innerHTML = ''
     data.Non_Matches.forEach(url => {
         const li = document.createElement('li');
         li.textContent = url;
         nonMatchesList.appendChild(li);
     });
-    resultsContainer.appendChild(nonMatchesList);
 }
 
 function saveResults() {
     const resultsContainer = document.getElementById('results');
     const results = Array.from(resultsContainer.children).map(child => child.textContent);
 
-    chrome.storage.local.set({ savedResults: results }, () => {
-        // alert('Results saved!');
-    });
+    chrome.storage.local.set({ savedResults: results });
 }
 
 // Load saved results when popup is opened
