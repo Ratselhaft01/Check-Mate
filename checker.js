@@ -97,23 +97,50 @@ function displayResults(results, data) {
 }
 
 function saveResults() {
-    const resultsContainer = document.getElementById('results');
-    const results = Array.from(resultsContainer.children).map(child => child.textContent);
+    const urlsList = document.getElementById('urls');
+    const matchesList = document.getElementById('matches');
+    const nonMatchesList = document.getElementById('non_matches');
 
-    chrome.storage.local.set({ savedResults: results });
+    const urls = Array.from(urlsList.children).map(child => child.textContent);
+    const matches = Array.from(matchesList.children).map(child => child.textContent);
+    const nonMatches = Array.from(nonMatchesList.children).map(child => child.textContent);
+
+    chrome.storage.local.set({
+        savedUrls: urls,
+        savedMatches: matches,
+        savedNonMatches: nonMatches
+    });
 }
+
 
 // Load saved results when popup is opened
 document.addEventListener('DOMContentLoaded', () => {
-    chrome.storage.local.get('savedResults', (data) => {
-        if (data.savedResults) {
-            const resultsContainer = document.getElementById('results');
+    chrome.storage.local.get(['savedUrls', 'savedMatches', 'savedNonMatches'], (data) => {
+        const urlsList = document.getElementById('urls');
+        const matchesList = document.getElementById('matches');
+        const nonMatchesList = document.getElementById('non_matches');
 
-            data.savedResults.forEach(resultText => {
-                const resultElement = document.createElement('div');
-                resultElement.textContent = resultText;
-                resultElement.className = 'result';
-                resultsContainer.appendChild(resultElement);
+        if (data.savedUrls) {
+            data.savedUrls.forEach(urlText => {
+                const urlElement = document.createElement('li');
+                urlElement.textContent = urlText;
+                urlsList.appendChild(urlElement);
+            });
+        }
+
+        if (data.savedMatches) {
+            data.savedMatches.forEach(matchText => {
+                const matchElement = document.createElement('li');
+                matchElement.textContent = matchText;
+                matchesList.appendChild(matchElement);
+            });
+        }
+
+        if (data.savedNonMatches) {
+            data.savedNonMatches.forEach(nonMatchText => {
+                const nonMatchElement = document.createElement('li');
+                nonMatchElement.textContent = nonMatchText;
+                nonMatchesList.appendChild(nonMatchElement);
             });
         }
     });
