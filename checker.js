@@ -11,7 +11,7 @@ document.getElementById('check-urls').addEventListener('click', () => {
                     const urls = results[0].result;
                     const protocolResults = checkProtocols(urls);
                     sendCollectedUrls(urls, protocolResults);
-                    saveResults();
+                    // saveResults();
                 } else {console.log('No urls to check.');}
             }
         );
@@ -66,6 +66,7 @@ function sendCollectedUrls(urls, protocolResults) {
     .then(response => response.json())
     .then(data => {
         displayResults(protocolResults, data);
+        saveResults();
     });
     // .catch(error => console.error('Error:', error));
 }
@@ -109,6 +110,8 @@ function saveResults() {
         savedUrls: urls,
         savedMatches: matches,
         savedNonMatches: nonMatches
+    }, () => {
+        console.log('Results saved!'); // Debugging statement to confirm saving
     });
 }
 
@@ -119,6 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlsList = document.getElementById('urls');
         const matchesList = document.getElementById('matches');
         const nonMatchesList = document.getElementById('non_matches');
+
+        // Clear existing content before appending loaded data
+        urlsList.innerHTML = '';
+        matchesList.innerHTML = '';
+        nonMatchesList.innerHTML = '';
 
         if (data.savedUrls) {
             data.savedUrls.forEach(urlText => {
@@ -143,5 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 nonMatchesList.appendChild(nonMatchElement);
             });
         }
+
+        console.log('Results loaded!'); // Debugging statement to confirm loading
     });
 });
