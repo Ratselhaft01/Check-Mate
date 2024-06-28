@@ -18,20 +18,56 @@ function sendCollectedUrls(urls, protocols) {
     })
     .then(response => response.json())
     .then(data => {
-        saveResults(data, protocols)
+        console.log(data)
+        badUrls = badOrGood(data.Matches, protocols)
+        saveResults(data, protocols, badUrls)
     });
 }
 
-function saveResults(data, protocols) {
+function badOrGood(matches, protocols) {
+    const badUrls = [];
+
+    matches.forEach(matchUrl => {
+        const matchFound = protocols.find(protocolInfo => protocolInfo.url === matchUrl);
+
+        if (matchFound) {
+            badUrls.push({
+                url: matchUrl,
+                protocol: matchFound.protocol,
+                shortened: matchFound.shortened
+            });
+        }
+    });
+
+    protocols.forEach(url => {
+        if (url.protocol == 'HTTP' || url.shortened == 'YES') {
+            badUrls.push({
+                url: url.url,
+                protocol: url.protocol,
+                shortened: url.shortened
+            });
+        }
+    });
+
+    return badUrls;
+}
+
+function saveResults(data, protocols, badUrls) {
     const matches = data.Matches
     const non_matches = data.Non_Matches
 
-    // Save URLs and protocol results to storage
+    // Save results to storage
     chrome.storage.local.set({
         savedUrls: protocols,
         savedMatches: matches,
-        savedNonMatches: non_matches
+        savedNonMatches: non_matches,
+        savedBadUrls: badUrls
     }, () => {
-        console.log('Results saved:', { protocols, matches, non_matches });
+        console.log('Results saved:', { protocols, matches, non_matches, badUrls });
+    });
+
+    chrome.runtime.sendMessage(message = {
+        action: 'sendBadUrls',
+        badUrls: badUrls
     });
 }

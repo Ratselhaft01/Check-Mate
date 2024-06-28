@@ -33,7 +33,7 @@ function checkProtocols(urls) {
         try {
             const parsedUrl = new URL(url);
             const protocol = parsedUrl.protocol === 'https:' ? 'HTTPS' : 'HTTP';
-            const shortened = isShortenedUrl(url) ? 'Yes' : 'No'; // Check if URL is shortened
+            const shortened = isShortenedUrl(url) ? 'YES' : 'NO'; // Check if URL is shortened
             return {
                 url: url,
                 protocol: protocol,
@@ -54,61 +54,35 @@ urls = link_extractor();
 console.log(urls)
 
 if (urls) {
-    // const urls = results[0].result;
     const protocols = checkProtocols(urls);
     chrome.runtime.sendMessage(message = {
         action: 'sendUrls',
         urls: urls,
         protocols: protocols
     });
-    // saveResults();
 } else {console.log('No urls to check.');}
 
+// Listen for messages from background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log('Message received in content script:', message);
 
+    if (message.action === 'sendBadUrls') {
+        const { badUrls } = message;
+        changeURLColor(badUrls)
+    }
+});
 
-
-
-
-// function saveResults() {
-//     const urlsList = document.getElementById('urls');
-//     const matchesList = document.getElementById('matches');
-//     const nonMatchesList = document.getElementById('non_matches');
-    
-//     const urls = Array.from(urlsList.children).map(child => child.textContent);
-//     const matches = Array.from(matchesList.children).map(child => child.textContent);
-//     const nonMatches = Array.from(nonMatchesList.children).map(child => child.textContent);
-    
-//     chrome.storage.local.set({
-//         savedUrls: urls,
-//         savedMatches: matches,
-//         savedNonMatches: nonMatches
-//     }, () => {
-//         console.log('Results saved!'); // Debugging statement to confirm saving
-//     });
-// }
-
-// function displayResults(results, data) {
-//     const protocolList = document.getElementById('urls');
-//     protocolList.innerHTML = ''
-//     results.forEach(result => {
-//         const li = document.createElement('li');
-//         li.textContent = `URL: ${result.url} - Protocol: ${result.protocol} - Shortened: ${result.shortened}`;
-//         protocolList.appendChild(li);
-//     });
-
-//     const matchesList = document.getElementById('matches');
-//     matchesList.innerHTML = ''
-//     data.Matches.forEach(url => {
-//         const li = document.createElement('li');
-//         li.textContent = url;
-//         matchesList.appendChild(li);
-//     });
-
-//     const nonMatchesList = document.getElementById('non_matches');
-//     nonMatchesList.innerHTML = ''
-//     data.Non_Matches.forEach(url => {
-//         const li = document.createElement('li');
-//         li.textContent = url;
-//         nonMatchesList.appendChild(li);
-//     });
-// }
+function changeURLColor(badUrls) {
+    badUrls.forEach(url => {
+        const linkElements = document.querySelectorAll(`a[href="${url.url}"]`);
+        linkElements.forEach(linkElement => {
+            linkElement.addClass('maliciousLink');
+            console.log(`Found malicious link: ${linkElement}`)
+        });
+        $('body').append(`
+            <style>
+            .malisciousLink {
+                color: red!important;
+            }</style>`);
+    });
+}

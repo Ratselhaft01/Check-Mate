@@ -1,6 +1,6 @@
 // Load saved results when popup is opened
 document.addEventListener('DOMContentLoaded', () => {
-    chrome.storage.local.get(['savedUrls', 'savedMatches', 'savedNonMatches'], (data) => {
+    chrome.storage.local.get(['savedUrls', 'savedMatches', 'savedNonMatches', 'savedBadUrls'], (data) => {
         const urlsList = document.getElementById('urls');
         const matchesList = document.getElementById('matches');
         const nonMatchesList = document.getElementById('non_matches');
@@ -35,5 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         console.log('Results loaded!'); // Debugging statement to confirm loading
+        console.log(data.savedBadUrls)
     });
 });
