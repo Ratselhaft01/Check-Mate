@@ -1,3 +1,23 @@
+// Listen for messages from background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    const badUrls = message.badUrls;
+    
+    if (message.action === 'sendBadUrls') {
+        console.log('Message received in content script:', message);
+        changeURLColor(badUrls)
+    }
+});
+
+function changeURLColor(badUrls) {
+    badUrls.forEach(url => {
+        const linkElements = document.querySelectorAll(`a[href="${url.url}"]`);
+        linkElements.forEach(linkElement => {
+            linkElement.style.background = 'red';
+            console.log(`Found malicious link: ${linkElement}`)
+        });
+    });
+}
+
 function link_extractor() {
     const urls = [];
     const anchorTags = document.querySelectorAll('a');
@@ -51,8 +71,6 @@ function checkProtocols(urls) {
 
 urls = link_extractor();
 
-console.log(urls)
-
 if (urls) {
     const protocols = checkProtocols(urls);
     chrome.runtime.sendMessage(message = {
@@ -61,28 +79,3 @@ if (urls) {
         protocols: protocols
     });
 } else {console.log('No urls to check.');}
-
-// Listen for messages from background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('Message received in content script:', message);
-
-    if (message.action === 'sendBadUrls') {
-        const { badUrls } = message;
-        changeURLColor(badUrls)
-    }
-});
-
-function changeURLColor(badUrls) {
-    badUrls.forEach(url => {
-        const linkElements = document.querySelectorAll(`a[href="${url.url}"]`);
-        linkElements.forEach(linkElement => {
-            linkElement.addClass('maliciousLink');
-            console.log(`Found malicious link: ${linkElement}`)
-        });
-        $('body').append(`
-            <style>
-            .malisciousLink {
-                color: red!important;
-            }</style>`);
-    });
-}

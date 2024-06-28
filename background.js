@@ -9,6 +9,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 function sendCollectedUrls(urls, protocols) {
+    // fetch('http://localhost:5000/search', {
     fetch('http://15.204.218.195', {
         method: 'POST',
         headers: {
@@ -40,7 +41,7 @@ function badOrGood(matches, protocols) {
     });
 
     protocols.forEach(url => {
-        if (url.protocol == 'HTTP' || url.shortened == 'YES') {
+        if ((url.protocol == 'HTTP' || url.shortened == 'YES') && (!badUrls.includes(url.url))) {
             badUrls.push({
                 url: url.url,
                 protocol: url.protocol,
@@ -66,8 +67,12 @@ function saveResults(data, protocols, badUrls) {
         console.log('Results saved:', { protocols, matches, non_matches, badUrls });
     });
 
-    chrome.runtime.sendMessage(message = {
-        action: 'sendBadUrls',
-        badUrls: badUrls
+    // Send message to the content script
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const activeTab = tabs[0];
+        chrome.tabs.sendMessage(activeTab.id, {
+            action: 'sendBadUrls',
+            badUrls: badUrls
+        });
     });
 }
