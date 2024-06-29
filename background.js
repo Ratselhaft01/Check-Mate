@@ -9,7 +9,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 function sendCollectedUrls(urls, protocols) {
-    // fetch('http://localhost:5000/search', {
     fetch('http://15.204.218.195', {
         method: 'POST',
         headers: {
@@ -35,18 +34,21 @@ function badOrGood(matches, protocols) {
             badUrls.push({
                 url: matchUrl,
                 protocol: matchFound.protocol,
-                shortened: matchFound.shortened
+                shortened: matchFound.shortened,
+                reported: 'YES'
             });
         }
     });
 
     protocols.forEach(url => {
-        if ((url.protocol == 'HTTP' || url.shortened == 'YES') && (!badUrls.includes(url.url))) {
+        if ((url.protocol == 'HTTP' || url.shortened == 'YES') && (!(badUrls.some(e => e.url == url.url)))) {
             badUrls.push({
                 url: url.url,
                 protocol: url.protocol,
-                shortened: url.shortened
+                shortened: url.shortened,
+                reported: 'NO'
             });
+            console.log(badUrls)
         }
     });
 

@@ -5,17 +5,84 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'sendBadUrls') {
         console.log('Message received in content script:', message);
         changeURLColor(badUrls)
+        explanations = getExplanations(badUrls)
+    }
+});
+
+// Listen for messages from the popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'getData') {
+        sendResponse(explanations);
+        return true;
     }
 });
 
 function changeURLColor(badUrls) {
-    badUrls.forEach(url => {
-        const linkElements = document.querySelectorAll(`a[href="${url.url}"]`);
+    badUrls.forEach(badUrl => {
+        const url = badUrl.url
+        const urlSlash = url.endsWith('/') ? url : `${url}/`;
+        const urlNoSlash = url.endsWith('/') ? url.slice(0, -1) : url;
+
+        const linkElements1 = Array.from(document.querySelectorAll(`a[href="${urlSlash}"]`));
+        const linkElements2 = Array.from(document.querySelectorAll(`a[href="${urlNoSlash}"]`));
+        const linkElements = linkElements1.concat(linkElements2)
+
         linkElements.forEach(linkElement => {
             linkElement.style.background = 'red';
             console.log(`Found malicious link: ${linkElement}`)
         });
     });
+}
+
+function getExplanations(badUrls) {
+    const explanations = [];
+
+    badUrls.forEach(url => {
+        if ((url.protocol == 'HTTP' && url.shortened == 'YES') && url.reported == 'YES') {
+            explanations.push({
+                url: url.url,
+                explanation: "This url has been reported to have had malware associated with it and should be avoided. This url is also using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more seen by a hacker. This url has also been shortened using a shortening service and so the true url has been hidden in a way. This doesn't mean that it is bad, but it is something you have to be careful about."
+            })
+        }
+        else if (url.protocol == 'HTTP' && url.shortened == 'YES') {
+            explanations.push({
+                url: url.url,
+                explanation: "This url is using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more seen by a hacker. This url has also been shortened using a shortening service and so the true url has been hidden in a way. This doesn't mean that it is bad, but it is something you have to be careful about."
+            })
+        } 
+        else if (url.protocol == 'HTTP' && url.reported == 'YES') {
+            explanations.push({
+                url: url.url,
+                explanation: "This url has been reported to have had malware associated with it and should be avoided. This url is also using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more seen by a hacker."
+            })
+        }
+        else if (url.shortened == 'YES' && url.reported == 'YES') {
+            explanations.push({
+                url: url.url,
+                explanation: "This url has been reported to have had malware associated with it and should be avoided. This url has also been shortened using a shortening service and so the true url has been hidden in a way. This doesn't mean that it is bad, but it is something you have to be careful about."
+            })
+        }
+        else if (url.protocol == 'HTTP') {
+            explanations.push({
+                url: url.url,
+                explanation: "This url is using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more seen by a hacker."
+            })
+        }
+        else if (url.shortened == 'YES') {
+            explanations.push({
+                url: url.url,
+                explanation: "This url has been shortened using a shortening service and so the true url has been hidden in a way. This doesn't mean that it is bad, but it is something you have to be careful about."
+            })
+        }
+        else if (url.reported == 'YES') {
+            explanations.push({
+                url: url.url,
+                explanation: "This url has been reported to have had malware associated with it and should be avoided."
+            })
+        }
+    });
+
+    return explanations;
 }
 
 function link_extractor() {
@@ -70,6 +137,7 @@ function checkProtocols(urls) {
 }
 
 urls = link_extractor();
+var explanations = []
 
 if (urls) {
     const protocols = checkProtocols(urls);
