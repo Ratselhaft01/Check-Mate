@@ -41,19 +41,19 @@ function getExplanations(badUrls) {
         if ((url.protocol == 'HTTP' && url.shortened == 'YES') && url.reported == 'YES') {
             explanations.push({
                 url: url.url,
-                explanation: "This url has been reported to have had malware associated with it and should be avoided. This url is also using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more seen by a hacker. This url has also been shortened using a shortening service and so the true url has been hidden in a way. This doesn't mean that it is bad, but it is something you have to be careful about."
+                explanation: "This url has been reported to have had malware associated with it and should be avoided. This url is also using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more easily seen by a hacker. This url has also been shortened using a shortening service and so the true url has been hidden in a way. This doesn't mean that it is bad, but it is something you have to be careful about."
             })
         }
         else if (url.protocol == 'HTTP' && url.shortened == 'YES') {
             explanations.push({
                 url: url.url,
-                explanation: "This url is using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more seen by a hacker. This url has also been shortened using a shortening service and so the true url has been hidden in a way. This doesn't mean that it is bad, but it is something you have to be careful about."
+                explanation: "This url is using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more easily seen by a hacker. This url has also been shortened using a shortening service and so the true url has been hidden in a way. This doesn't mean that it is bad, but it is something you have to be careful about."
             })
         } 
         else if (url.protocol == 'HTTP' && url.reported == 'YES') {
             explanations.push({
                 url: url.url,
-                explanation: "This url has been reported to have had malware associated with it and should be avoided. This url is also using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more seen by a hacker."
+                explanation: "This url has been reported to have had malware associated with it and should be avoided. This url is also using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more easily seen by a hacker."
             })
         }
         else if (url.shortened == 'YES' && url.reported == 'YES') {
@@ -65,7 +65,7 @@ function getExplanations(badUrls) {
         else if (url.protocol == 'HTTP') {
             explanations.push({
                 url: url.url,
-                explanation: "This url is using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more seen by a hacker."
+                explanation: "This url is using an insecure internet protocol. This means that everything you do on the site and everything the site tells you can be much more easily seen by a hacker."
             })
         }
         else if (url.shortened == 'YES') {
