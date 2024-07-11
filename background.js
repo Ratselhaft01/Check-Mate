@@ -14,7 +14,9 @@ function sendCollectedUrls(urls, protocols) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ urls: urls })
+        body: JSON.stringify({ 
+            request: 'search',
+            urls: urls })
     })
     .then(response => response.json())
     .then(data => {

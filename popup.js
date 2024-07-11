@@ -25,7 +25,7 @@ function getDataFromActiveTab() {
         const activeTab = tabs[0];
         chrome.tabs.sendMessage(activeTab.id, { action: 'getData' }, (response) => {
             if (chrome.runtime.lastError) {
-                console.error(chrome.runtime.lastError);
+                // console.error(chrome.runtime.lastError);
                 return;
             }
             updatePopupUI(response);
@@ -37,41 +37,32 @@ function getDataFromActiveTab() {
 document.addEventListener('DOMContentLoaded', () => {
     getDataFromActiveTab();
 
-    // chrome.storage.local.get(['savedUrls', 'savedMatches', 'savedNonMatches', 'savedBadUrls'], (data) => {
-    //     const urlsList = document.getElementById('urls');
-    //     const matchesList = document.getElementById('matches');
-    //     const nonMatchesList = document.getElementById('non_matches');
+    // Handle the report form submission
+    document.getElementById('reportForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const reportUrl = document.getElementById('reportUrl').value;
+        const reportExplanation = document.getElementById('reportExplanation').value;
 
-    //     // Clear existing content before appending loaded data
-    //     urlsList.innerHTML = '';
-    //     matchesList.innerHTML = '';
-    //     nonMatchesList.innerHTML = '';
-
-    //     if (data.savedUrls) {
-    //         data.savedUrls.forEach(url => {
-    //             const urlElement = document.createElement('li');
-    //             urlElement.textContent = `URL: ${url.url} - Protocol: ${url.protocol} - Shortened: ${url.shortened}`;
-    //             urlsList.appendChild(urlElement);
-    //         });
-    //     }
-
-    //     if (data.savedMatches) {
-    //         data.savedMatches.forEach(matchText => {
-    //             const matchElement = document.createElement('li');
-    //             matchElement.textContent = matchText;
-    //             matchesList.appendChild(matchElement);
-    //         });
-    //     }
-
-    //     if (data.savedNonMatches) {
-    //         data.savedNonMatches.forEach(nonMatchText => {
-    //             const nonMatchElement = document.createElement('li');
-    //             nonMatchElement.textContent = nonMatchText;
-    //             nonMatchesList.appendChild(nonMatchElement);
-    //         });
-    //     }
-
-    //     console.log('Results loaded!'); // Debugging statement to confirm loading
-    //     console.log(data.savedBadUrls)
-    // });
+        // Send the report to the server
+        fetch('http://15.204.218.195', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                request: 'url_submission',
+                suspect_url: reportUrl,
+                explanation: reportExplanation
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Report submitted successfully!');
+            document.getElementById('reportForm').reset();
+        })
+        .catch(error => {
+            console.error('Error submitting report:', error);
+            alert('Error submitting report. Please try again later.');
+        });
+    });
 });

@@ -8,9 +8,12 @@
     <link rel="stylesheet" href="stylesheet.css">
 </head>
 <body>
-    <div>
-        <h2>Check Mate</h2>
-    </div>
+    <h1>Check Mate</h1>
+    <form id="reportForm">
+        <input type="url" id="reportUrl" placeholder="URL" required>
+        <textarea id="reportExplanation" placeholder="Why is this URL suspicious?" required></textarea>
+        <button type="submit">Report URL</button>
+    </form>
     <div id="data"></div>
 </body>
 </html>
