@@ -1,6 +1,71 @@
+function link_extractor() {
+    const urls = [];
+    const anchorTags = document.querySelectorAll('a');
+
+    anchorTags.forEach(anchor => {
+        const href = anchor.href;
+        anchor.addEventListener('click', handleLinkClick);
+        if (href) {
+            urls.push(href);
+        }
+    });
+
+    return urls;
+}
+
+function isShortenedUrl(url) {
+    // List of common URL shortener domains
+    const shortenerDomains = [
+        'bit.ly', 'goo.gl', 't.co', 'tinyurl.com', 'ow.ly', 'buff.ly', 'rebrand.ly', 'is.gd', 'bl.ink', 'mcaf.ee', 'tiny.cc', 'lnkd.in', 't2mio.com', 'shorte.st', 'cutt.ly', 'qr.ae', 'v.gd', 'clck.ru'
+        // Add more as needed
+    ];
+    
+    // Check if the URL's domain matches a known shortener domain
+    const domain = (new URL(url)).hostname;
+    if (shortenerDomains.includes(domain)) {
+        return true;
+    }
+
+    return false
+}
+
+function checkProtocols(urls) {
+    return urls.map(url => {
+        try {
+            const parsedUrl = new URL(url);
+            const protocol = parsedUrl.protocol === 'https:' ? 'HTTPS' : 'HTTP';
+            const shortened = isShortenedUrl(url) ? 'YES' : 'NO'; // Check if URL is shortened
+            return {
+                url: url,
+                protocol: protocol,
+                shortened: shortened // Include whether URL is shortened in the result
+            };
+        } catch (error) {
+            return {
+                url: url,
+                protocol: 'Invalid URL',
+                shortened: 'N/A'
+            };
+        }
+    });
+}
+
+urls = link_extractor();
+var explanations = []
+var badUrls = []
+
+if (urls) {
+    const protocols = checkProtocols(urls);
+    chrome.runtime.sendMessage(message = {
+        action: 'sendUrls',
+        urls: urls,
+        protocols: protocols
+    });
+} else {console.log('No urls to check.');}
+
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    const badUrls = message.badUrls;
+    badUrls = message.badUrls;
     
     if (message.action === 'sendBadUrls') {
         console.log('Message received in content script:', message);
@@ -35,8 +100,6 @@ function changeURLColor(badUrls) {
 }
 
 function getExplanations(badUrls) {
-    const explanations = [];
-
     badUrls.forEach(url => {
         if ((url.protocol == 'HTTP' && url.shortened == 'YES') && url.reported == 'YES') {
             explanations.push({
@@ -85,65 +148,16 @@ function getExplanations(badUrls) {
     return explanations;
 }
 
-function link_extractor() {
-    const urls = [];
-    const anchorTags = document.querySelectorAll('a');
+// Function to handle link clicks
+function handleLinkClick(event) {
+    const clickedUrl = event.target.href;
 
-    anchorTags.forEach(anchor => {
-        const href = anchor.href;
-        if (href) {
-            urls.push(href);
+    if (badUrls.some(e => e.url == clickedUrl)) {
+        event.preventDefault(); // Prevent the default link click behavior
+        const userConfirmed = confirm('Warning: This link could be dangerous. Do you want to continue?');
+
+        if (userConfirmed) {
+            window.location.href = clickedUrl; // Redirect to the URL if the user confirms
         }
-    });
-
-    return urls;
-}
-
-function isShortenedUrl(url) {
-    // List of common URL shortener domains
-    const shortenerDomains = [
-        'bit.ly', 'goo.gl', 't.co', 'tinyurl.com', 'ow.ly', 'buff.ly', 'rebrand.ly', 'is.gd', 'bl.ink', 'mcaf.ee', 'tiny.cc', 'lnkd.in', 't2mio.com', 'shorte.st', 'cutt.ly', 'qr.ae', 'v.gd', 'clck.ru'
-        // Add more as needed
-    ];
-
-    // Check if the URL's domain matches a known shortener domain
-    const domain = (new URL(url)).hostname;
-    if (shortenerDomains.includes(domain)) {
-        return true;
     }
-
-    return false
 }
-
-function checkProtocols(urls) {
-    return urls.map(url => {
-        try {
-            const parsedUrl = new URL(url);
-            const protocol = parsedUrl.protocol === 'https:' ? 'HTTPS' : 'HTTP';
-            const shortened = isShortenedUrl(url) ? 'YES' : 'NO'; // Check if URL is shortened
-            return {
-                url: url,
-                protocol: protocol,
-                shortened: shortened // Include whether URL is shortened in the result
-            };
-        } catch (error) {
-            return {
-                url: url,
-                protocol: 'Invalid URL',
-                shortened: 'N/A'
-            };
-        }
-    });
-}
-
-urls = link_extractor();
-var explanations = []
-
-if (urls) {
-    const protocols = checkProtocols(urls);
-    chrome.runtime.sendMessage(message = {
-        action: 'sendUrls',
-        urls: urls,
-        protocols: protocols
-    });
-} else {console.log('No urls to check.');}
